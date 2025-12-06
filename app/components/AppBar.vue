@@ -31,6 +31,13 @@
       >
         Logout
       </v-btn>
+
+      <span
+        v-if="isLoggedIn"
+        class="font-bold m-4"
+      >
+        {{ user?.name }}
+      </span>
     </v-skeleton-loader>
   </v-app-bar>
 </template>
