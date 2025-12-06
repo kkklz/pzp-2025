@@ -121,7 +121,7 @@ const confirmPasswordRules = [(value: string) => {
 }]
 
 async function handleRegister() {
-  await authStore.register(email.value, password.value, { name: name.value })
+  await authStore.register(email.value, password.value, { name: name.value, email: email.value, photoUrl: null })
   if (!error.value)
     navigateTo('/')
 }

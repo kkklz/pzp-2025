@@ -38,6 +38,9 @@ export const useUserStore = defineStore('User', () => {
     }
 
     user.value = data as User
+    user.value.photoUrl = data.photoUrl
+      ? `${data.photoUrl}?t=${Date.now()}`
+      : null
   }
 
   async function fetchUsers() {
@@ -59,11 +62,22 @@ export const useUserStore = defineStore('User', () => {
     }
   }
 
-  async function updateUser(userId: string, userData: Partial<Omit<User, 'id'>>) {
+  async function updateUser(userId: string, userData: Partial<Omit<User, 'id'>>, avatarFile?: File) {
     error.value = null
     loading.value = true
 
     try {
+      if (avatarFile) {
+        const { error: avatarError } = await supabase.storage.from('media').upload(`users/${userId}`, avatarFile, {
+          upsert: true,
+        })
+        if (avatarError) {
+          throw avatarError
+        }
+        const { data: photoData } = supabase.storage.from('media').getPublicUrl(`users/${userId}`)
+        userData.photoUrl = photoData.publicUrl
+      }
+
       const { data, error: err } = await supabase.from(USER).update({
         ...userData,
       }).eq('id', userId).select().single()
