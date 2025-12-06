@@ -15,7 +15,6 @@ export const useAuthStore = defineStore('auth', () => {
 
   const userStore = useUserStore()
   const { user } = storeToRefs(userStore)
-  let authSubscription: { data: { subscription: { unsubscribe: () => void } } } | null = null
 
   async function register(email: string, password: string, userData: RegisterUser) {
     error.value = null
@@ -73,13 +72,15 @@ export const useAuthStore = defineStore('auth', () => {
     userStore.clearStore()
   }
 
-  function setupAuthListener() {
-    if (authSubscription)
-      authSubscription.data.subscription.unsubscribe()
+  async function setupAuthListener() {
+    loading.value = true
+    try {
+      const { data: { user: u } } = await supabase.auth.getUser()
+      authUser.value = u
+    }
+    catch {}
 
     const sub = supabase.auth.onAuthStateChange(async (event, session) => {
-      loading.value = true
-
       authUser.value = session?.user || null
 
       if (event === 'SIGNED_OUT' || !authUser.value) {
@@ -94,8 +95,6 @@ export const useAuthStore = defineStore('auth', () => {
       }
       loading.value = false
     })
-
-    authSubscription = sub as any
 
     return () => {
       try {

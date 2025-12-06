@@ -16,7 +16,9 @@ onMounted(() => {
   unsubscribe = authStore.setupAuthListener()
 })
 
-onUnmounted(() => {
-  unsubscribe && unsubscribe()
+onUnmounted(async () => {
+  if (unsubscribe) {
+    (await unsubscribe)()
+  }
 })
 </script>

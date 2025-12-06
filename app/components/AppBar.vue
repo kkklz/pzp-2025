@@ -53,8 +53,4 @@ function onLogout() {
   authStore.logout()
   navigateTo('/login')
 }
-
-onMounted(() => {
-  loading.value = true
-})
 </script>
