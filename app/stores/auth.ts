@@ -2,6 +2,7 @@ import type { User as SupabaseUser } from '@supabase/supabase-js'
 import type User from '~/types/user'
 import { AuthError } from '@supabase/supabase-js'
 import { defineStore } from 'pinia'
+import { useUserStore } from './user'
 
 type RegisterUser = Omit<User, 'id'>
 
@@ -11,14 +12,13 @@ export const useAuthStore = defineStore('auth', () => {
   const error: Ref<AuthError | null> = ref(null)
 
   const supabase = useSupabaseClient()
-  const router = useRouter()
 
   const userStore = useUserStore()
   const { user } = storeToRefs(userStore)
+  let authSubscription: { data: { subscription: { unsubscribe: () => void } } } | null = null
 
   async function register(email: string, password: string, userData: RegisterUser) {
     error.value = null
-    loading.value = true
 
     const { data, error: err } = await supabase.auth.signUp({
       email,
@@ -38,13 +38,10 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     userStore.addUser({
-      id: data.user.id,
       ...userData,
     })
 
     authUser.value = data.user
-
-    router.push('/')
   }
 
   async function login(email: string, password: string) {
@@ -61,8 +58,6 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     authUser.value = data.user
-
-    router.push('/')
   }
 
   async function logout() {
@@ -76,20 +71,38 @@ export const useAuthStore = defineStore('auth', () => {
     }
 
     userStore.clearStore()
-    router.push('/login')
   }
 
   function setupAuthListener() {
-    supabase.auth.onAuthStateChange((event, session) => {
+    if (authSubscription)
+      authSubscription.data.subscription.unsubscribe()
+
+    const sub = supabase.auth.onAuthStateChange(async (event, session) => {
+      loading.value = true
+
       authUser.value = session?.user || null
-      setTimeout(async () => {
-        // dodatkowy warunek user.value === null, bo state change jest wywolywany nawet przy focusie na karte (np. przy zmianie kart w przegladarce)
-        // dodatkowo zgodnie z dokumentacja, nie wiedziec dlaczego, event SIGNED_IN jest wywolywany przy focusie na karte, a nie tylko przy logowaniu
-        if (authUser.value != null && user.value === null) {
-          await userStore.fetchUser(authUser.value.id)
-        }
-      }, 0)
+
+      if (event === 'SIGNED_OUT' || !authUser.value) {
+        userStore.clearStore()
+        loading.value = false
+
+        return
+      }
+
+      if (authUser.value && user.value === null) {
+        await userStore.fetchUser(authUser.value.id)
+      }
+      loading.value = false
     })
+
+    authSubscription = sub as any
+
+    return () => {
+      try {
+        sub.data.subscription.unsubscribe()
+      }
+      catch {}
+    }
   }
 
   return { authUser, loading, error, register, login, logout, setupAuthListener }

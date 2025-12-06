@@ -16,7 +16,7 @@ export const useUserStore = defineStore('User', () => {
     error.value = null
   }
 
-  async function addUser(userData: User) {
+  async function addUser(userData: Omit<User, 'id'>) {
     const { data, error: err } = await supabase.from(USER).insert(userData).select().limit(1).single()
 
     if (err || data == null) {

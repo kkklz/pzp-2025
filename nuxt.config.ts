@@ -21,7 +21,12 @@ export default defineNuxtConfig({
     typeCheck: true,
   },
   supabase: {
-    redirect: false, // temporary dopoki nie ma logowania
+    redirect: true,
+    redirectOptions: {
+      login: '/login',
+      callback: '/',
+      exclude: ['/register'],
+    },
     types: '@/types/database.types.ts',
   },
 })
