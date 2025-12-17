@@ -2,7 +2,9 @@
   <v-app theme="dark">
     <AppBar />
 
-    <NuxtPage />
+    <div class="mt-20">
+      <NuxtPage />
+    </div>
   </v-app>
 </template>
 
