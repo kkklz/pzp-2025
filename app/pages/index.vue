@@ -21,50 +21,83 @@
       </div>
     </div>
 
-    <v-card
-      class="pa-8"
-      :loading="teamsLoading"
-    >
-      <v-card-title>
-        <h2 class="text-3xl mb-4">
-          Your Teams
-        </h2>
-      </v-card-title>
+    <v-card class="pa-6">
+      <div class="mb-6 flex items-center justify-between">
+        <div class="flex gap-3 items-center">
+          <v-icon
+            icon="mdi-account-group"
+            size="28"
+            class="text-purple-400"
+          />
 
-      <v-divider />
+          <h2 class="text-2xl font-bold">
+            Your Teams
+          </h2>
+        </div>
+
+        <v-btn
+          variant="flat"
+          color="primary"
+          to="/newteam"
+          prepend-icon="mdi-plus"
+        >
+          New Team
+        </v-btn>
+      </div>
+
+      <v-divider class="mb-6" />
 
       <div
-        v-if="teams"
-        class="rounded-lg flex flex-row flex-wrap gap-4"
+        v-if="teamsLoading"
+        class="flex flex-wrap gap-4"
+      >
+        <v-skeleton-loader
+          v-for="i in 3"
+          :key="i"
+          type="avatar, text"
+          width="120"
+        />
+      </div>
+
+      <div
+        v-else-if="teams && teams.length > 0"
+        class="gap-4 grid grid-cols-1 lg:grid-cols-6 md:grid-cols-5 sm:grid-cols-4"
       >
         <NuxtLink
           v-for="team in teams"
           :key="team.id"
-          class="pa-4 text-center rounded-lg flex flex-col gap-2 w-30 cursor-pointer transition-opacity ease-in items-center justify-center hover:opacity-80"
+          class="bg-surface-light p-4 rounded-md flex flex-col gap-3 cursor-pointer transition-all ease-in items-center hover-opacity-80 hover:shadow-lg"
           :to="`/team/${team.id}`"
         >
           <TeamIcon
             :team="team"
-            :size="60"
+            :size="56"
           />
 
-          <span class="block">
+          <span class="text-sm font-medium text-center w-full truncate">
             {{ team.name }}
           </span>
         </NuxtLink>
       </div>
 
-      <v-divider />
+      <div
+        v-else
+        class="py-12 text-center"
+      >
+        <v-icon
+          icon="mdi-account-group-outline"
+          size="64"
+          class="text-gray-500 mb-4"
+        />
 
-      <v-card-actions class="mt-4">
-        <v-btn
-          variant="tonal"
-          class="px-5! py-3! h-fit!"
-          to="/newteam"
-        >
-          Create New Team
-        </v-btn>
-      </v-card-actions>
+        <p class="text-lg text-gray-400 mb-2">
+          No teams yet
+        </p>
+
+        <p class="text-sm text-gray-500">
+          Create your first team to get started!
+        </p>
+      </div>
     </v-card>
   </div>
 </template>
