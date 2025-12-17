@@ -22,7 +22,7 @@ export const useTeamStore = defineStore('team', () => {
     error.value = null
   }
 
-  async function addTeam(teamData: Team) {
+  async function addTeam(teamData: Omit<Team, 'id' | 'created_at'>) {
     error.value = null
     loading.value = true
     const { data, error: err } = await supabase.from(TEAM).insert({
@@ -114,13 +114,11 @@ export const useTeamStore = defineStore('team', () => {
     loading.value = false
   }
 
-  async function addTeamMember(teamId: string, userId: string) {
+  async function addTeamMembers(teamId: string, userIds: string[]) {
     error.value = null
     loading.value = true
-    const { data, error: err } = await supabase.from(TEAM_MEMBERS).insert({
-      team_id: teamId,
-      user_id: userId,
-    }).select().single()
+    const inserts = userIds.map(user_id => ({ team_id: teamId, user_id }))
+    const { data, error: err } = await supabase.from(TEAM_MEMBERS).insert(inserts).select()
 
     if (err) {
       error.value = err
@@ -129,7 +127,9 @@ export const useTeamStore = defineStore('team', () => {
       return
     }
 
-    teamMembers.value.push(data)
+    if (data) {
+      teamMembers.value.push(...data)
+    }
     loading.value = false
   }
 
@@ -149,16 +149,37 @@ export const useTeamStore = defineStore('team', () => {
     loading.value = false
   }
 
-  async function removeTeamMember(teamId: string, userId: string) {
+  async function removeTeamMembers(teamId: string, userIds: string[]) {
     error.value = null
     loading.value = true
-    const { error: err } = await supabase.from(TEAM_MEMBERS).delete().eq('team_id', teamId).eq('user_id', userId)
+    const { error: err } = await supabase
+      .from(TEAM_MEMBERS)
+      .delete()
+      .eq('team_id', teamId)
+      .in('user_id', userIds)
 
     if (err) {
       error.value = err
     }
+    else {
+      teamMembers.value = teamMembers.value.filter(member => !userIds.includes(member.user_id))
+    }
     loading.value = false
   }
 
-  return { team, teams, addTeam, updateTeam, fetchTeam, deleteTeam, fetchUserTeams, addTeamMember, fetchTeamMembers, removeTeamMember, clearStore }
+  return {
+    team,
+    teams,
+    error,
+    loading,
+    addTeam,
+    updateTeam,
+    fetchTeam,
+    deleteTeam,
+    fetchUserTeams,
+    addTeamMembers,
+    fetchTeamMembers,
+    removeTeamMembers,
+    clearStore,
+  }
 })
