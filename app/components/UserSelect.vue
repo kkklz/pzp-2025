@@ -32,14 +32,21 @@
 <script setup lang="ts">
 import type User from '~/types/user'
 
+const { selectedIds } = defineProps<{
+  selectedIds?: string[]
+}>()
+
 const selectedUsers = defineModel<User[]>({ required: true })
 const userStore = useUserStore()
 const { users, loading: usersLoading } = storeToRefs(userStore)
 
 const selectedUsersIds = ref<string[]>([])
 
-onBeforeMount(() => {
-  userStore.fetchUsers()
+onBeforeMount(async () => {
+  await userStore.fetchUsers()
+  if (selectedIds) {
+    selectedUsersIds.value = selectedIds
+  }
 })
 
 watch(selectedUsersIds, () => {
