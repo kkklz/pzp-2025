@@ -13,7 +13,7 @@ export const useChatStore = defineStore('chat', () => {
   const CHATS = 'team_chats'
   const MESSAGES = 'messages'
 
-  async function addChat(chatData: Omit<Chat, 'id'>) {
+  async function addChat(chatData: Omit<Chat, 'id' | 'created_at'>) {
     error.value = null
     loading.value = true
     const { data, error: err } = await supabase.from(CHATS).insert({

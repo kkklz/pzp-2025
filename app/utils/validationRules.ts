@@ -26,9 +26,18 @@ export function useValidationRules() {
     return 'Name must be at least 4 characters long and contain only letters, numbers, and underscores.'
   }]
 
+  const teamNameRules = [(value: string) => {
+    if (value.length >= 4) {
+      return true
+    }
+
+    return 'Name must be at least 4 characters long.'
+  }]
+
   return {
     emailRules,
     passwordRules,
     nameRules,
+    teamNameRules,
   }
 }

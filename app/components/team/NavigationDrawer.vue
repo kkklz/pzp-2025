@@ -21,10 +21,29 @@
 
       <v-divider class="mt-2" />
 
-      <v-list-subheader>Chats</v-list-subheader>
+      <div class="flex w-full justify-between">
+        <v-list-subheader>
+          Chats
+        </v-list-subheader>
 
-      <v-list-item to="/">
-        <span class="font-black">#</span> Test Chat 1
+        <v-btn
+          icon
+          size="small"
+          variant="plain"
+          @click="dialog = true"
+        >
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
+      </div>
+
+      <v-list-item
+        v-for="chat in chats"
+        :key="chat.id"
+        :to="`/team/${team.id}/chat/${chat.id}`"
+      >
+        <span class="font-black"># </span>
+
+        <span>{{ chat.name }}</span>
       </v-list-item>
 
       <v-divider class="mt-2" />
@@ -44,6 +63,13 @@
       </v-list-item>
     </v-list>
   </v-navigation-drawer>
+
+  <TeamCreateDialog
+    v-if="team"
+    v-model="dialog"
+    type="chat"
+    :team-id="team.id"
+  />
 </template>
 
 <script setup lang="ts">
@@ -52,7 +78,12 @@ const teamId = route.params.teamId as string
 const teamStore = useTeamStore()
 const { team } = storeToRefs(teamStore)
 
+const dialog = ref(false)
+const chatStore = useChatStore()
+const { chats } = storeToRefs(chatStore)
+
 onMounted(async () => {
   await teamStore.fetchTeam(teamId)
+  await chatStore.fetchTeamChats(teamId)
 })
 </script>
