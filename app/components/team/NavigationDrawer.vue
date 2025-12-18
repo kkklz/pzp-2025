@@ -48,8 +48,7 @@
 
 <script setup lang="ts">
 const route = useRoute()
-const teamId = route.params.id as string
-
+const teamId = route.params.teamId as string
 const teamStore = useTeamStore()
 const { team } = storeToRefs(teamStore)
 

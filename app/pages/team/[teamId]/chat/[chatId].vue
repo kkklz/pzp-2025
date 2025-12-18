@@ -1,114 +1,116 @@
 <template>
-  <v-card
-    width="800"
-    height="80vh"
-    class="d-flex flex-column chat-container mx-auto"
-  >
-    <!-- Chat Header -->
-    <v-card-title class="chat-header">
-      <v-icon class="me-2">
-        mdi-chat
-      </v-icon>
-      Team Chat
-      <v-spacer />
-
-      <v-chip
-        size="small"
-        color="success"
-        variant="outlined"
-      >
-        <v-icon start>
-          mdi-circle
+  <TeamPage>
+    <v-card
+      width="800"
+      height="80vh"
+      class="d-flex flex-column chat-container mx-auto"
+    >
+      <!-- Chat Header -->
+      <v-card-title class="chat-header">
+        <v-icon class="me-2">
+          mdi-chat
         </v-icon>
-        Online
-      </v-chip>
-    </v-card-title>
+        Team Chat
+        <v-spacer />
 
-    <!-- Messages Area -->
-    <v-card-text class="chat-messages pa-0 flex-grow-1">
-      <div
-        ref="messagesContainer"
-        class="messages-container"
-      >
-        <div
-          v-for="m in messages"
-          :key="m.id"
-          class="message-wrapper"
-          :class="[
-            m.userId === user?.id
-              ? 'message-own'
-              : 'message-other',
-          ]"
+        <v-chip
+          size="small"
+          color="success"
+          variant="outlined"
         >
-          <v-avatar
-            size="36"
-            class="message-avatar"
+          <v-icon start>
+            mdi-circle
+          </v-icon>
+          Online
+        </v-chip>
+      </v-card-title>
+
+      <!-- Messages Area -->
+      <v-card-text class="chat-messages pa-0 flex-grow-1">
+        <div
+          ref="messagesContainer"
+          class="messages-container"
+        >
+          <div
+            v-for="m in messages"
+            :key="m.id"
+            class="message-wrapper"
+            :class="[
+              m.userId === user?.id
+                ? 'message-own'
+                : 'message-other',
+            ]"
           >
-            <v-img
-              :src="users.find((u) => u.id === m.userId)?.photoUrl || '/default-avatar.webp'"
-              alt="avatar"
-            />
-          </v-avatar>
+            <v-avatar
+              size="36"
+              class="message-avatar"
+            >
+              <v-img
+                :src="users.find((u) => u.id === m.userId)?.photoUrl || '/default-avatar.webp'"
+                alt="avatar"
+              />
+            </v-avatar>
 
-          <div class="message-content">
-            <div class="message-header">
-              <span class="message-author">
-                {{ users.find((u) => u.id === m.userId)?.name || 'Unknown' }}
-              </span>
+            <div class="message-content">
+              <div class="message-header">
+                <span class="message-author">
+                  {{ users.find((u) => u.id === m.userId)?.name || 'Unknown' }}
+                </span>
 
-              <span class="message-time">
-                {{ formatTime(m.date) }}
-              </span>
-            </div>
+                <span class="message-time">
+                  {{ formatTime(m.date) }}
+                </span>
+              </div>
 
-            <div class="message-text">
-              {{ m.message }}
+              <div class="message-text">
+                {{ m.message }}
+              </div>
             </div>
           </div>
-        </div>
 
-        <!-- Empty state -->
-        <div
-          v-if="messages.length === 0"
-          class="empty-state"
-        >
-          <v-icon
-            size="48"
-            color="grey-lighten-1"
+          <!-- Empty state -->
+          <div
+            v-if="messages.length === 0"
+            class="empty-state"
           >
-            mdi-chat-outline
-          </v-icon>
+            <v-icon
+              size="48"
+              color="grey-lighten-1"
+            >
+              mdi-chat-outline
+            </v-icon>
 
-          <p class="text-grey-lighten-1 mt-2">
-            No messages yet. Start the conversation!
-          </p>
+            <p class="text-grey-lighten-1 mt-2">
+              No messages yet. Start the conversation!
+            </p>
+          </div>
         </div>
-      </div>
-    </v-card-text>
+      </v-card-text>
 
-    <!-- Message Input -->
-    <v-card-actions class="chat-input pa-3">
-      <v-text-field
-        v-model="message"
-        placeholder="Type a message..."
-        variant="outlined"
-        density="comfortable"
-        hide-details
-        :disabled="!user"
-        @keydown.enter="sendMessage"
-      >
-        <template #append-inner>
-          <v-btn
-            icon="mdi-send"
-            size="small"
-            variant="text"
-            :disabled="!message.trim() || !user"
-            @click="sendMessage"
-          />
-        </template>
-      </v-text-field>
-    </v-card-actions>
-  </v-card>
+      <!-- Message Input -->
+      <v-card-actions class="chat-input pa-3">
+        <v-text-field
+          v-model="message"
+          placeholder="Type a message..."
+          variant="outlined"
+          density="comfortable"
+          hide-details
+          :disabled="!user"
+          @keydown.enter="sendMessage"
+        >
+          <template #append-inner>
+            <v-btn
+              icon="mdi-send"
+              size="small"
+              variant="text"
+              :disabled="!message.trim() || !user"
+              @click="sendMessage"
+            />
+          </template>
+        </v-text-field>
+      </v-card-actions>
+    </v-card>
+  </TeamPage>
 </template>
 
 <script setup lang="tsx">
