@@ -122,14 +122,14 @@ interface Message {
 }
 
 const route = useRoute()
-const { id } = route.params
+const chatId = route.params.chatId as string
 
 const message = ref<string>('')
 const messages = ref<Message[]>([])
 const messagesContainer = ref<HTMLElement>()
 
 const supabase = useSupabaseClient()
-const myChannel = supabase.channel(id!.toString(), {
+const myChannel = supabase.channel(chatId, {
   config: {
     broadcast: {
       self: true,

@@ -43,6 +43,48 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          chat_id: string
+          created_at: string
+          date: string
+          id: string
+          message: string
+          user_id: string
+        }
+        Insert: {
+          chat_id?: string
+          created_at?: string
+          date: string
+          id?: string
+          message: string
+          user_id?: string
+        }
+        Update: {
+          chat_id?: string
+          created_at?: string
+          date?: string
+          id?: string
+          message?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_chat_id_fkey"
+            columns: ["chat_id"]
+            isOneToOne: false
+            referencedRelation: "team_chats"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "users"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notes: {
         Row: {
           content: string | null
@@ -169,6 +211,35 @@ export type Database = {
           },
         ]
       }
+      team_chats: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          team_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          team_id?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "team_chats_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       team_members: {
         Row: {
           created_at: string | null
@@ -179,8 +250,8 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
-          team_id?: string
-          user_id?: string
+          team_id: string
+          user_id: string
         }
         Update: {
           created_at?: string | null
@@ -214,7 +285,7 @@ export type Database = {
         }
         Insert: {
           created_at?: string | null
-          created_by?: string
+          created_by: string
           id?: string
           name: string
         }

@@ -86,7 +86,7 @@
 import type User from '~/types/user'
 
 const route = useRoute()
-const teamId = route.params.id as string
+const teamId = route.params.teamId as string
 
 const teamStore = useTeamStore()
 const { team } = storeToRefs(teamStore)
