@@ -97,5 +97,24 @@ export const useUserStore = defineStore('User', () => {
     }
   }
 
-  return { user, users, error, loading, fetchUser, fetchUsers, addUser, updateUser, clearStore }
+  async function fetchUsersByIds(userIds: string[]) {
+    error.value = null
+    loading.value = true
+
+    try {
+      const { data, error: err } = await supabase.from(USER).select().in('id', userIds)
+      if (err)
+        throw err
+
+      users.value = data as User[] || []
+    }
+    catch (err: any) {
+      error.value = err
+    }
+    finally {
+      loading.value = false
+    }
+  }
+
+  return { user, users, error, loading, fetchUser, fetchUsers, fetchUsersByIds, addUser, updateUser, clearStore }
 })

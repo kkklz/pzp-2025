@@ -47,7 +47,6 @@ export type Database = {
         Row: {
           chat_id: string
           created_at: string
-          date: string
           id: string
           message: string
           user_id: string
@@ -55,7 +54,6 @@ export type Database = {
         Insert: {
           chat_id?: string
           created_at?: string
-          date: string
           id?: string
           message: string
           user_id?: string
@@ -63,7 +61,6 @@ export type Database = {
         Update: {
           chat_id?: string
           created_at?: string
-          date?: string
           id?: string
           message?: string
           user_id?: string
@@ -222,7 +219,7 @@ export type Database = {
           created_at?: string
           id?: string
           name: string
-          team_id?: string
+          team_id: string
         }
         Update: {
           created_at?: string

@@ -7,9 +7,8 @@ export interface Chat {
 
 export interface Message {
   id: string
-  date: string
   user_id: string
   message: string
   chat_id: string
-  created_at: string
+  created_at?: string
 }

@@ -58,7 +58,6 @@ export const useChatStore = defineStore('chat', () => {
           id,
           message,
           user_id,
-          date,
           created_at,
           chat_id
         )
@@ -121,11 +120,15 @@ export const useChatStore = defineStore('chat', () => {
 
     if (err) {
       error.value = err
+      loading.value = false
+      throw err
     }
     else {
       messages.value.push(data)
+      loading.value = false
+
+      return data
     }
-    loading.value = false
   }
 
   return {

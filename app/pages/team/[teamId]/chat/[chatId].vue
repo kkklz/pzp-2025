@@ -36,7 +36,7 @@
             :key="m.id"
             class="message-wrapper"
             :class="[
-              m.userId === user?.id
+              m.user_id === user?.id
                 ? 'message-own'
                 : 'message-other',
             ]"
@@ -46,7 +46,7 @@
               class="message-avatar"
             >
               <v-img
-                :src="users.find((u) => u.id === m.userId)?.photoUrl || '/default-avatar.webp'"
+                :src="users.find((u) => u.id === m.user_id)?.photoUrl || '/default-avatar.webp'"
                 alt="avatar"
               />
             </v-avatar>
@@ -54,11 +54,13 @@
             <div class="message-content">
               <div class="message-header">
                 <span class="message-author">
-                  {{ users.find((u) => u.id === m.userId)?.name || 'Unknown' }}
+                  {{ users.find((u) => u.id === m.user_id)?.name || 'Unknown' }}
                 </span>
 
                 <span class="message-time">
-                  {{ formatTime(m.date) }}
+                  {{ formatTime(new Date(m.created_at
+                    ? m.created_at
+                    : Date.now())) }}
                 </span>
               </div>
 
@@ -114,33 +116,33 @@
 </template>
 
 <script setup lang="tsx">
-import { uuid } from '@supabase/supabase-js/dist/module/lib/helpers.js'
+import type { Message } from '~/types/chat'
 
-interface Message {
-  id: string
-  date: Date
-  userId: string
-  message: string
-}
+const chatStore = useChatStore()
+const { messages } = storeToRefs(chatStore)
 
 const route = useRoute()
 const chatId = route.params.chatId as string
+const teamId = route.params.teamId as string
 
 const message = ref<string>('')
-const messages = ref<Message[]>([])
 const messagesContainer = ref<HTMLElement>()
 
 const supabase = useSupabaseClient()
+
 const myChannel = supabase.channel(chatId, {
   config: {
     broadcast: {
-      self: true,
+      self: false,
     },
   },
 })
 
 const userStore = useUserStore()
 const { user, users } = storeToRefs(userStore)
+
+const teamStore = useTeamStore()
+const { teamMembers } = storeToRefs(teamStore)
 
 // Format time for display
 function formatTime(date: Date) {
@@ -159,46 +161,64 @@ function scrollToBottom() {
   })
 }
 
-function sendMessage() {
+async function sendMessage() {
   if (!message.value.trim() || !user.value)
     return
 
-  myChannel.send({
-    type: 'broadcast',
-    event: 'shout',
-    payload: {
-      id: uuid(),
-      date: new Date(),
-      userId: user.value.id,
+  const userId = user.value.id
+
+  try {
+    // First, add to database and local store
+    const addedMessage = await chatStore.addMessage({
+      chat_id: chatId,
+      user_id: userId,
       message: message.value.trim(),
-    },
-  })
-    .then(() => {
-      message.value = ''
-      scrollToBottom()
+      created_at: new Date().toISOString(),
     })
-    .catch((error) => {
-      console.error('Failed to send message:', error)
+
+    // Then broadcast to others
+    myChannel.send({
+      type: 'broadcast',
+      event: 'shout',
+      payload: {
+        id: addedMessage.id,
+        date: new Date(),
+        userId,
+        message: message.value.trim(),
+      },
     })
+
+    message.value = ''
+    scrollToBottom()
+  }
+  catch (error) {
+    console.error('Failed to send message:', error)
+  }
 }
 
 function messageReceived(payload: Message) {
-  messages.value.push(payload)
-  scrollToBottom()
+  // Check if message already exists to avoid duplicates
+  if (!messages.value.some(m => m.id === payload.id)) {
+    messages.value.push(payload)
+    scrollToBottom()
+  }
 }
 
-onMounted(() => {
+onMounted(async () => {
+  await teamStore.fetchTeamMembers(teamId)
+  const userIds = teamMembers.value.map(m => m.user_id)
+  await userStore.fetchUsersByIds(userIds)
+  chatStore.fetchChatWithMessages(chatId)
+
   myChannel
     .on(
       'broadcast',
       { event: 'shout' },
-      (payload) => {
+      (payload: { payload: Message }) => {
         messageReceived(payload.payload)
       },
     )
     .subscribe()
-
-  userStore.fetchUsers()
 })
 </script>
 
