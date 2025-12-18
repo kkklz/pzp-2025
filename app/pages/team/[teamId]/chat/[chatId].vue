@@ -1,7 +1,7 @@
 <template>
   <TeamPage>
     <v-card
-      width="800"
+      max-width="800"
       height="80vh"
       class="d-flex flex-column chat-container mx-auto"
     >
