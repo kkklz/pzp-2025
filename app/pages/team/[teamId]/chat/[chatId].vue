@@ -7,22 +7,34 @@
     >
       <!-- Chat Header -->
       <v-card-title class="text-white px-8 py-4">
-        <v-icon class="me-2">
-          mdi-chat
-        </v-icon>
-        {{ chat?.name || 'Chat' }}
-        <v-spacer />
+        <div class="flex">
+          <div>
+            <v-icon>
+              mdi-chat
+            </v-icon>
+            {{ chat?.name || 'Chat' }}
+            <v-spacer />
 
-        <v-chip
-          size="small"
-          color="success"
-          variant="outlined"
-        >
-          <v-icon start>
-            mdi-circle
-          </v-icon>
-          Online
-        </v-chip>
+            <v-chip
+              size="small"
+              color="success"
+              variant="outlined"
+            >
+              <v-icon start>
+                mdi-circle
+              </v-icon>
+              Online
+            </v-chip>
+          </div>
+
+          <v-btn
+            icon="mdi-trash-can"
+            color="red"
+            class="ml-auto"
+            variant="plain"
+            @click="deleteDialogOpen = true"
+          />
+        </div>
       </v-card-title>
 
       <v-divider />
@@ -140,6 +152,11 @@
       </v-card-actions>
     </v-card>
   </TeamPage>
+
+  <ConfirmDialog
+    v-model="deleteDialogOpen"
+    @confirm="deleteChat"
+  />
 </template>
 
 <script setup lang="tsx">
@@ -158,6 +175,7 @@ const messagesContainer = ref<HTMLElement>()
 const supabase = useSupabaseClient()
 
 const loading = ref(true)
+const deleteDialogOpen = ref(false)
 
 const myChannel = supabase.channel(chatId, {
   config: {
@@ -259,4 +277,10 @@ onMounted(async () => {
 onUnmounted(() => {
   myChannel.unsubscribe()
 })
+
+async function deleteChat() {
+  await chatStore.deleteChat(chatId)
+  await chatStore.fetchTeamChats(teamId)
+  navigateTo(`/team/${teamId}`)
+}
 </script>
