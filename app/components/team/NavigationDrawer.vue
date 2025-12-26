@@ -50,7 +50,7 @@
 
       <v-list-subheader>Task Boards</v-list-subheader>
 
-      <v-list-item to="/">
+      <v-list-item>
         <span class="font-black">#</span> Test Board 1
       </v-list-item>
 
@@ -58,7 +58,7 @@
 
       <v-list-subheader>Notes</v-list-subheader>
 
-      <v-list-item to="/">
+      <v-list-item>
         <span class="font-black">#</span> Test Notes 1
       </v-list-item>
     </v-list>
