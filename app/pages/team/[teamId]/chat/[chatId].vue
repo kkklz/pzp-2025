@@ -26,14 +26,6 @@
               Online
             </v-chip>
           </div>
-
-          <v-btn
-            icon="mdi-trash-can"
-            color="red"
-            class="ml-auto"
-            variant="plain"
-            @click="deleteDialogOpen = true"
-          />
         </div>
       </v-card-title>
 
@@ -152,11 +144,6 @@
       </v-card-actions>
     </v-card>
   </TeamPage>
-
-  <ConfirmDialog
-    v-model="deleteDialogOpen"
-    @confirm="deleteChat"
-  />
 </template>
 
 <script setup lang="tsx">
@@ -175,7 +162,6 @@ const messagesContainer = ref<HTMLElement>()
 const supabase = useSupabaseClient()
 
 const loading = ref(true)
-const deleteDialogOpen = ref(false)
 
 const myChannel = supabase.channel(chatId, {
   config: {
@@ -277,10 +263,4 @@ onMounted(async () => {
 onUnmounted(() => {
   myChannel.unsubscribe()
 })
-
-async function deleteChat() {
-  await chatStore.deleteChat(chatId)
-  await chatStore.fetchTeamChats(teamId)
-  navigateTo(`/team/${teamId}`)
-}
 </script>
