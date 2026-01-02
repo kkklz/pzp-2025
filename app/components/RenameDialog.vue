@@ -5,13 +5,13 @@
   >
     <v-card class="pa-4">
       <v-card-title>
-        Rename Chat
+        Rename {{ object }}
       </v-card-title>
 
       <v-card-text>
         <v-text-field
           v-model="newName"
-          label="New Chat Name"
+          :label="`New ${object} Name`"
           :rules="[
             v => !!v || 'Name is required',
           ]"
@@ -41,11 +41,13 @@
 
 <script setup lang="ts">
 interface Props {
-  chat?: any
+  object?: string
+  objectName?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {
-  chat: null,
+  object: '',
+  objectName: '',
 })
 
 const emit = defineEmits<{
@@ -58,8 +60,8 @@ const newName = ref('')
 const loading = ref(false)
 
 watch(isOpen, (newVal) => {
-  if (newVal && props.chat) {
-    newName.value = props.chat.name
+  if (newVal && props.objectName) {
+    newName.value = props.objectName
   }
 })
 

@@ -95,7 +95,8 @@
 
   <RenameDialog
     v-model="renameDialogVisible"
-    :chat="selectedChat"
+    :object-name="selectedChat?.name"
+    object="Chat"
     @confirm="handleRenameConfirm"
   />
 
