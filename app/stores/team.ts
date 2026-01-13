@@ -40,13 +40,17 @@ export const useTeamStore = defineStore('team', () => {
     loading.value = false
   }
 
-  async function updateTeam(teamId: string, teamData: Omit<Team, 'id'>) {
+  async function updateTeam(teamId: string, teamData: Partial<Omit<Team, 'id'>>) {
     error.value = null
     loading.value = true
-    const { data, error: err } = await supabase.from(TEAM).update({
-      id: teamId,
-      ...teamData,
-    })
+    const { data, error: err } = await supabase
+      .from(TEAM)
+      .update({
+        ...teamData,
+      })
+      .eq('id', teamId)
+      .select()
+      .single()
 
     if (err) {
       error.value = err
@@ -144,7 +148,6 @@ export const useTeamStore = defineStore('team', () => {
 
       return
     }
-
     teamMembers.value = data
     loading.value = false
   }
@@ -170,6 +173,7 @@ export const useTeamStore = defineStore('team', () => {
   return {
     team,
     teams,
+    teamMembers,
     error,
     loading,
     addTeam,
