@@ -9,7 +9,7 @@ export interface Task {
   id: string
   board_id: string
   title: string
-  description: string
+  description: string | null
   status: string
   due_date: string
   created_by: string
