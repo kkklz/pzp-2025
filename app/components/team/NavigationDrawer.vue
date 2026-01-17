@@ -21,6 +21,7 @@
 
       <v-divider class="mt-2" />
 
+      <!-- Chats Section -->
       <div class="flex w-full justify-between">
         <v-list-subheader>
           Chats
@@ -30,17 +31,17 @@
           icon
           size="small"
           variant="plain"
-          @click="dialog = true"
+          @click="chatDialogVisible = true"
         >
           <v-icon>mdi-plus</v-icon>
         </v-btn>
       </div>
 
       <v-list-item
-        v-for="chat in chats"
+        v-for="chat in unref(chatSection.items)"
         :key="chat.id"
         :to="`/team/${team.id}/chat/${chat.id}`"
-        @contextmenu.prevent="showContextMenu($event, chat)"
+        @contextmenu.prevent="chatSection.showContextMenu($event, chat)"
       >
         <span class="font-black"># </span>
 
@@ -48,19 +49,22 @@
       </v-list-item>
 
       <v-menu
-        v-model="menuVisible"
-        :activator="menuActivator"
+        :model-value="unref(chatSection.menuVisible)"
+        :activator="unref(chatSection.menuActivator)"
         offset-y
+        @update:model-value="(v) => {
+          chatSection.menuVisible.value = v
+        }"
       >
         <v-list>
-          <v-list-item @click="openRenameDialog">
+          <v-list-item @click="chatSection.openRenameDialog()">
             <span class="mdi mdi-square-edit-outline" />
             Rename
           </v-list-item>
 
           <v-list-item
             class="text-error"
-            @click="openDeleteDialog"
+            @click="chatSection.openDeleteDialog()"
           >
             <span class="mdi mdi-delete" />
             Delete
@@ -70,11 +74,56 @@
 
       <v-divider class="mt-2" />
 
-      <v-list-subheader>Task Boards</v-list-subheader>
+      <!-- Task Boards Section -->
+      <div class="flex w-full justify-between">
+        <v-list-subheader>
+          Task Boards
+        </v-list-subheader>
 
-      <v-list-item>
-        <span class="font-black">#</span> Test Board 1
+        <v-btn
+          icon
+          size="small"
+          variant="plain"
+          @click="boardDialogVisible = true"
+        >
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
+      </div>
+
+      <v-list-item
+        v-for="board in unref(boardSection.items)"
+        :key="board.id"
+        :to="`/team/${team.id}/board/${board.id}`"
+        @contextmenu.prevent="boardSection.showContextMenu($event, board)"
+      >
+        <span class="font-black"># </span>
+
+        <span>{{ board.name }}</span>
       </v-list-item>
+
+      <v-menu
+        :model-value="unref(boardSection.menuVisible)"
+        :activator="unref(boardSection.menuActivator)"
+        offset-y
+        @update:model-value="(v) => {
+          boardSection.menuVisible.value = v
+        }"
+      >
+        <v-list>
+          <v-list-item @click="boardSection.openRenameDialog()">
+            <span class="mdi mdi-square-edit-outline" />
+            Rename
+          </v-list-item>
+
+          <v-list-item
+            class="text-error"
+            @click="boardSection.openDeleteDialog()"
+          >
+            <span class="mdi mdi-delete" />
+            Delete
+          </v-list-item>
+        </v-list>
+      </v-menu>
 
       <v-divider class="mt-2" />
 
@@ -88,83 +137,101 @@
 
   <TeamCreateDialog
     v-if="team"
-    v-model="dialog"
+    v-model="chatDialogVisible"
     type="chat"
     :team-id="team.id"
   />
 
+  <TeamCreateDialog
+    v-if="team"
+    v-model="boardDialogVisible"
+    type="board"
+    :team-id="team.id"
+  />
+
+  <!-- Chat Rename/Delete Dialogs -->
   <RenameDialog
-    v-model="renameDialogVisible"
-    :object-name="selectedChat?.name"
+    :model-value="unref(chatSection.renameDialogVisible)"
+    :object-name="unref(chatSection.selectedItem)?.name"
     object="Chat"
-    @confirm="handleRenameConfirm"
+    :loading="unref(chatSection.isLoading)"
+    @update:model-value="(v) => {
+      chatSection.renameDialogVisible.value = v
+    }"
+    @confirm="chatSection.handleRenameConfirm"
   />
 
   <ConfirmDialog
-    v-model="deleteDialogVisible"
+    :model-value="unref(chatSection.deleteDialogVisible)"
     title="Delete Chat"
     message="Are you sure you want to delete this chat?"
     confirm-text="Delete"
     confirm-color="error"
-    @confirm="handleDeleteConfirm"
+    @update:model-value="(v) => {
+      chatSection.deleteDialogVisible.value = v
+    }"
+    @confirm="chatSection.handleDeleteConfirm"
+  />
+
+  <!-- Board Rename/Delete Dialogs -->
+  <RenameDialog
+    :model-value="unref(boardSection.renameDialogVisible)"
+    :object-name="unref(boardSection.selectedItem)?.name"
+    object="Board"
+    :loading="unref(boardSection.isLoading)"
+    @update:model-value="(v) => {
+      boardSection.renameDialogVisible.value = v
+    }"
+    @confirm="boardSection.handleRenameConfirm"
+  />
+
+  <ConfirmDialog
+    :model-value="unref(boardSection.deleteDialogVisible)"
+    title="Delete Board"
+    message="Are you sure you want to delete this board?"
+    confirm-text="Delete"
+    confirm-color="error"
+    @update:model-value="(v) => {
+      boardSection.deleteDialogVisible.value = v
+    }"
+    @confirm="boardSection.handleDeleteConfirm"
   />
 </template>
 
 <script setup lang="ts">
-import type { Chat } from '~/types/chat'
-
 const route = useRoute()
 const teamId = route.params.teamId as string
 const teamStore = useTeamStore()
 const { team } = storeToRefs(teamStore)
 
-const dialog = ref(false)
+const chatDialogVisible = ref(false)
+const boardDialogVisible = ref(false)
+
 const chatStore = useChatStore()
 const { chats } = storeToRefs(chatStore)
 
-const menuVisible = ref(false)
-const menuActivator = ref<Element | undefined>(undefined)
-const selectedChat = ref<Chat | null>()
+const boardStore = useBoardStore()
+const { boards } = storeToRefs(boardStore)
 
-const renameDialogVisible = ref(false)
-const deleteDialogVisible = ref(false)
+const chatSection = useCollectionSection({
+  items: chats,
+  onRename: (chat, newName) => chatStore.updateChat(chat.id, newName),
+  onDelete: chat => chatStore.deleteChat(chat.id),
+  onRefetch: () => chatStore.fetchTeamChats(teamId),
+})
 
-function showContextMenu(event: MouseEvent, chat: Chat) {
-  selectedChat.value = chat
-  menuVisible.value = true
-  menuActivator.value = event.target as Element
-}
-
-function openRenameDialog() {
-  renameDialogVisible.value = true
-  menuVisible.value = false
-}
-
-function openDeleteDialog() {
-  deleteDialogVisible.value = true
-  menuVisible.value = false
-}
-
-async function handleRenameConfirm(newName: string) {
-  if (selectedChat.value) {
-    await chatStore.updateChat(selectedChat.value.id, newName)
-    await chatStore.fetchTeamChats(teamId)
-    renameDialogVisible.value = false
-    navigateTo(`/team/${teamId}/chat/${selectedChat.value.id}`)
-  }
-}
-
-async function handleDeleteConfirm() {
-  if (selectedChat.value) {
-    await chatStore.deleteChat(selectedChat.value.id)
-    await chatStore.fetchTeamChats(teamId)
-    deleteDialogVisible.value = false
-    navigateTo(`/team/${teamId}`)
-  }
-}
+const boardSection = useCollectionSection({
+  items: boards,
+  onRename: (board, newName) => boardStore.updateBoard(board.id, newName),
+  onDelete: board => boardStore.deleteBoard(board.id),
+  onRefetch: () => boardStore.fetchTeamBoards(teamId),
+})
 
 onMounted(async () => {
-  await teamStore.fetchTeam(teamId)
-  await chatStore.fetchTeamChats(teamId)
+  await Promise.all([
+    teamStore.fetchTeam(teamId),
+    chatStore.fetchTeamChats(teamId),
+    boardStore.fetchTeamBoards(teamId),
+  ])
 })
 </script>
