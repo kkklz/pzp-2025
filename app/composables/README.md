@@ -120,6 +120,52 @@ Dialog do zmiany nazwy elementu.
 />
 ```
 
+### `UserSelect`
+
+Reusable komponent do wyboru użytkowników z opcjonalnym filtrowaniem do członków zespołu.
+
+**Props:**
+- `label?: string` - etykieta (default: "Select Users")
+- `selectedIds?: string[]` - preselektowane ID użytkowników
+- `multiple?: boolean` - czy można wybrać wielu użytkowników (default: true)
+- `teamId?: string` - opcjonalny ID zespołu do filtrowania tylko do jego członków
+
+**Model:**
+- `v-model` - Ref<User | User[]> - wybrany użytkownik(cy)
+  - Jeśli `multiple=true` - zwraca `User[]`
+  - Jeśli `multiple=false` - zwraca `User` lub pusty object
+
+**Użycie do przypisania do Taska:**
+```vue
+<!-- Wybierz członków teamu do przypisania -->
+<UserSelect
+  v-model="taskAssignees"
+  label="Assign to..."
+  :team-id="teamId"
+  multiple
+/>
+```
+
+**Użycie do wyboru pojedynczego użytkownika:**
+```vue
+<!-- Wybierz pojedynczego kreatora taska -->
+<UserSelect
+  v-model="taskCreator"
+  label="Created by"
+  :team-id="teamId"
+  :multiple="false"
+/>
+```
+
+**Użycie bez filtrowania (wszystkich użytkowników):**
+```vue
+<!-- Wszyscy użytkownicy, bez ograniczeń do zespołu -->
+<UserSelect
+  v-model="selectedUsers"
+  label="Select users"
+/>
+```
+
 ## Jak dodać nową kolekcję (np. Notes)
 
 1. **Store** (notes.ts):

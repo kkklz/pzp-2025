@@ -188,7 +188,7 @@ export const useBoardStore = defineStore('board', () => {
     }
   }
 
-  async function addTaskAssignee(taskId: string, assigneeData: Omit<TaskAssignee, 'id'>) {
+  async function addTaskAssignee(assigneeData: Omit<TaskAssignee, 'id'>) {
     error.value = null
     loading.value = false
     const { data, error: err } = await supabase.from(TASK_ASSIGNEES).insert({
