@@ -25,12 +25,12 @@
 
       <v-divider />
 
-      <v-card-text class="flex gap-3 w-full overflow-x-auto">
+      <v-card-text class="gap-8 grid grid-cols-3 h-full w-full items-start overflow-y-auto">
         <v-card
           v-for="task in tasks"
           :key="task.id"
-          class="flex-shrink-0 h-full w-[350px]"
           variant="outlined"
+          class="min-h-[500px]"
         >
           <v-card-title class="d-flex items-center justify-between">
             <h2>{{ task.title }}</h2>
@@ -72,7 +72,7 @@
               />
             </div>
 
-            <p class="bg-surface-bright mt-2 pa-2 rounded-md min-h-[300px]">
+            <p class="bg-surface-bright mt-2 pa-2 rounded-md max-h-[300px] min-h-[100px] overflow-y-auto">
               {{ task.description }}
             </p>
 
@@ -131,10 +131,14 @@
             label="Due date"
           />
 
-          <v-text-field
+          <v-select
             v-model="newTaskStatus"
-            type="text"
             label="Status"
+            :items="[
+              'Created',
+              'Doing',
+              'Done',
+            ]"
           />
 
           <UserSelect
@@ -181,11 +185,13 @@ const teamId = route.params.teamId as string
 
 const openCreateTaskDialog = ref(false)
 
+const dateWeekAhead = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString().split('T')[0] as string
+
 const newTaskName = ref('')
 const newTaskDescription = ref('')
-const newTaskDueDate = ref('')
+const newTaskDueDate = ref<string>(dateWeekAhead)
 const newTaskAssignees = ref<User[]>([])
-const newTaskStatus = ref('')
+const newTaskStatus = ref('Created')
 
 function getTaskCreatorPhotoUrl(taskCreatedById: string): string {
   // Find the team_member record with this ID
