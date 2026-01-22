@@ -57,6 +57,7 @@
             variant="outlined"
             hide-details
             label="Team Members"
+            multiple
           />
 
           <v-btn

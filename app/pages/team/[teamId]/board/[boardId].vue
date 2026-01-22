@@ -77,14 +77,14 @@
             </p>
 
             <div
-              v-if="getTaskAssignees(task.id).length > 0"
+              v-if="getTaskAssignees(task.id).value.length > 0"
               class="d-flex mt-4 gap-2 items-center"
             >
               <span class="text-sm text-gray-400">Assignees:</span>
 
               <div class="d-flex gap-1">
                 <v-tooltip
-                  v-for="assignee in getTaskAssignees(task.id)"
+                  v-for="assignee in getTaskAssignees(task.id).value"
                   :key="assignee.id"
                   :text="getAssigneeUserName(assignee.user_id)"
                   location="bottom"
@@ -204,17 +204,17 @@ function getTaskCreatorPhotoUrl(taskCreatedById: string): string {
 function getTaskCreatorName(taskCreatedById: string): string {
   const teamMember = teamMembers.value.find(m => m.id === taskCreatedById)
   if (!teamMember)
-    return 'User'
+    return 'A'
 
   const taskCreator = users.value.find(u => u.id === teamMember.user_id)
   if (!taskCreator)
-    return 'User'
+    return 'B'
 
-  return taskCreator.name || 'User'
+  return taskCreator.name || 'C'
 }
 
 function getTaskAssignees(taskId: string) {
-  return taskAssignees.value.filter(ta => ta.task_id === taskId)
+  return computed(() => taskAssignees.value.filter(ta => ta.task_id === taskId))
 }
 
 function getAssigneePhotoUrl(userId: string): string {
@@ -226,11 +226,12 @@ function getAssigneePhotoUrl(userId: string): string {
 }
 
 function getAssigneeUserName(userId: string): string {
-  const assigneeUser = users.value.find(u => u.id === userId)
+  const assigneeTeamMember = teamMembers.value.find(u => u.id === userId)
+  const assigneeUser = users.value.find(u => u.id === assigneeTeamMember?.user_id)
   if (!assigneeUser)
-    return 'User'
+    return 'A'
 
-  return assigneeUser.name || 'User'
+  return assigneeUser.name || 'B'
 }
 
 async function handleCreateTask() {

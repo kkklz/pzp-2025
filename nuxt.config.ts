@@ -21,7 +21,7 @@ export default defineNuxtConfig({
     typeCheck: true,
   },
   supabase: {
-    redirect: true,
+    redirect: false,
     redirectOptions: {
       login: '/login',
       callback: '/confirm',
