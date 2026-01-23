@@ -19,7 +19,7 @@
         <v-btn
           icon="mdi-plus"
           variant="tonal"
-          @click="openCreateTaskDialog = true"
+          @click="handleOpenCreateTask"
         />
       </v-card-title>
 
@@ -53,11 +53,36 @@
                 </template>
               </v-tooltip>
 
-              <v-icon
-                icon="mdi-dots-vertical"
-                size="24"
-                class="p-3 rounded-full cursor-pointer"
-              />
+              <v-btn
+                variant="plain"
+                density="compact"
+              >
+                <v-icon
+                  icon="mdi-dots-vertical"
+                  size="24"
+                  class="cursor-pointer"
+                />
+
+                <v-menu activator="parent">
+                  <v-list>
+                    <v-list-item
+                      link
+                      @click="handleOpenEditTask(task)"
+                    >
+                      <span class="mdi mdi-square-edit-outline" />
+                      Edit
+                    </v-list-item>
+
+                    <v-list-item
+                      link
+                      class="text-error"
+                    >
+                      <span class="mdi mdi-delete" />
+                      Delete
+                    </v-list-item>
+                  </v-list>
+                </v-menu>
+              </v-btn>
             </div>
           </v-card-title>
 
@@ -105,71 +130,21 @@
     </v-card>
   </TeamPage>
 
-  <v-dialog
-    v-model="openCreateTaskDialog"
-    @after-leave="handleCloseDialog"
-  >
-    <v-card class="mx-auto pa-4 max-w-max min-w-[400px]">
-      <v-card-title>Create Task</v-card-title>
-
-      <v-card-text>
-        <v-form @submit.prevent="handleCreateTask">
-          <v-text-field
-            v-model="newTaskName"
-            label="Task name"
-            required
-          />
-
-          <v-textarea
-            v-model="newTaskDescription"
-            label="Description"
-          />
-
-          <v-text-field
-            v-model="newTaskDueDate"
-            type="date"
-            label="Due date"
-          />
-
-          <v-select
-            v-model="newTaskStatus"
-            label="Status"
-            :items="[
-              'Created',
-              'Doing',
-              'Done',
-            ]"
-          />
-
-          <UserSelect
-            v-model="newTaskAssignees"
-            :team-id="teamId"
-            multiple
-            label="Select assignees"
-          />
-
-          <v-card-actions class="d-flex justify-between">
-            <v-btn
-              @click="handleCloseDialog"
-            >
-              Cancel
-            </v-btn>
-
-            <v-btn
-              type="submit"
-              color="primary"
-              variant="flat"
-            >
-              Create task
-            </v-btn>
-          </v-card-actions>
-        </v-form>
-      </v-card-text>
-    </v-card>
-  </v-dialog>
+  <TaskDialog
+    :open="showTaskDialog"
+    :task="selectedTask"
+    :team-id="teamId"
+    :board-id="boardId"
+    :current-user-id="currentUserTeamMemberId"
+    :current-assignees="currentAssignees"
+    :loading="boardStore.loading"
+    @update:open="showTaskDialog = $event"
+    @save="handleSaveTask"
+  />
 </template>
 
 <script setup lang="tsx">
+import type { Task } from '~/types/board'
 import type User from '~/types/user'
 
 const boardStore = useBoardStore()
@@ -183,15 +158,9 @@ const route = useRoute()
 const boardId = route.params.boardId as string
 const teamId = route.params.teamId as string
 
-const openCreateTaskDialog = ref(false)
-
-const dateWeekAhead = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString().split('T')[0] as string
-
-const newTaskName = ref('')
-const newTaskDescription = ref('')
-const newTaskDueDate = ref<string>(dateWeekAhead)
-const newTaskAssignees = ref<User[]>([])
-const newTaskStatus = ref('Created')
+const showTaskDialog = ref(false)
+const selectedTask = ref<Task | null>(null)
+const currentUserTeamMemberId = ref('')
 
 function getTaskCreatorPhotoUrl(taskCreatedById: string): string {
   // Find the team_member record with this ID
@@ -240,63 +209,84 @@ function getAssigneeUserName(userId: string): string {
   return assigneeUser.name || 'B'
 }
 
-async function handleCreateTask() {
+const currentAssignees = computed(() => {
+  if (!selectedTask.value)
+    return []
+
+  const taskAssigneesForTask = taskAssignees.value.filter(ta => ta.task_id === selectedTask.value!.id)
+
+  return taskAssigneesForTask
+    .map((ta) => {
+      const teamMember = teamMembers.value.find(m => m.id === ta.user_id)
+      if (!teamMember)
+        return null
+      const assigneeUser = users.value.find(u => u.id === teamMember.user_id)
+
+      return assigneeUser
+    })
+    .filter((u): u is User => u !== null)
+})
+
+function handleOpenCreateTask() {
+  selectedTask.value = null
+  showTaskDialog.value = true
+}
+
+function handleOpenEditTask(task: Task) {
+  selectedTask.value = task
+  showTaskDialog.value = true
+}
+
+async function handleSaveTask(data: { task: Omit<Task, 'id'>, assignees: User[] }) {
+  const currentTask = selectedTask.value
   try {
-    if (!user.value?.id) {
-      return
+    if (currentTask) {
+      // Edit existing task
+      await boardStore.updateTask(currentTask.id, data.task)
+
+      // Update assignees - delete old and add new
+      const oldAssignees = taskAssignees.value.filter(ta => ta.task_id === currentTask.id)
+      await Promise.all(oldAssignees.map(ta => boardStore.deleteTaskAssignee(ta.id)))
+
+      await Promise.all(data.assignees.map(async (assigneeUser) => {
+        const teamMember = teamMembers.value.find(
+          m => m.team_id === teamId && m.user_id === assigneeUser.id,
+        )
+        if (teamMember) {
+          await boardStore.addTaskAssignee({
+            task_id: currentTask.id,
+            user_id: teamMember.id,
+            created_at: new Date().toISOString(),
+          })
+        }
+      }))
+    }
+    else {
+      // Create new task
+      const newTaskData = await boardStore.addTask(data.task)
+
+      await Promise.all(data.assignees.map(async (assigneeUser) => {
+        const teamMember = teamMembers.value.find(
+          m => m.team_id === teamId && m.user_id === assigneeUser.id,
+        )
+        if (teamMember) {
+          await boardStore.addTaskAssignee({
+            task_id: newTaskData.id,
+            user_id: teamMember.id,
+            created_at: new Date().toISOString(),
+          })
+        }
+      }))
     }
 
-    // Find the team_member record for the current user
-    const currentTeamMember = teamMembers.value.find(
-      m => m.team_id === teamId && m.user_id === user.value?.id,
-    )
-
-    if (!currentTeamMember) {
-      console.error('Current user is not a member of this team')
-
-      return
+    if (currentTask === selectedTask.value) {
+      selectedTask.value = null
     }
-
-    const newTaskData = await boardStore.addTask({
-      board_id: boardId,
-      created_by: currentTeamMember.id,
-      title: newTaskName.value,
-      description: newTaskDescription.value,
-      status: newTaskStatus.value,
-      due_date: newTaskDueDate.value,
-      created_at: new Date().toISOString(),
-    })
-
-    newTaskAssignees.value.forEach(async (ta) => {
-      // Find the team_member record for this assignee
-      const teamMember = teamMembers.value.find(
-        m => m.team_id === teamId && m.user_id === ta.id,
-      )
-
-      if (teamMember) {
-        await boardStore.addTaskAssignee({
-          task_id: newTaskData.id,
-          user_id: teamMember.id,
-          created_at: new Date().toISOString(),
-        })
-      }
-    })
+    showTaskDialog.value = false
   }
   catch (err: any) {
     console.error(err)
   }
-  finally {
-    handleCloseDialog()
-  }
-}
-
-function handleCloseDialog() {
-  newTaskName.value = ''
-  newTaskDescription.value = ''
-  newTaskDueDate.value = ''
-  newTaskAssignees.value = []
-  newTaskStatus.value = ''
-  openCreateTaskDialog.value = false
 }
 
 onBeforeMount(async () => {
@@ -305,6 +295,15 @@ onBeforeMount(async () => {
     boardStore.fetchBoardWithTasks(boardId),
     teamStore.fetchTeamMembers(teamId),
   ])
+
+  // Find the current user's team member ID
+  const currentTeamMember = teamMembers.value.find(
+    m => m.team_id === teamId && m.user_id === user.value?.id,
+  )
+  if (currentTeamMember) {
+    currentUserTeamMemberId.value = currentTeamMember.id
+  }
+
   await userStore.fetchUsersByIds(teamMembers.value.map(tm => tm.user_id))
 
   // Fetch assignees for all tasks
