@@ -38,6 +38,7 @@ interface Props {
   multiple?: boolean
   teamId?: string
   hideLoggedUser?: boolean
+  hideOwner?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -61,6 +62,10 @@ const availableUsers = computed(() => {
       .map(m => m.user_id)
 
     return users.value.filter(u => teamMemberIds.includes(u.id))
+  }
+
+  if (props.hideOwner) {
+    return users.value.filter(u => u.id !== teamStore.team?.created_by)
   }
 
   if (props.hideLoggedUser) {

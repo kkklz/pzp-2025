@@ -78,7 +78,7 @@
             hide-details
             label="Team Members"
             multiple
-            hide-logged-user
+            hide-owner
           />
 
           <v-btn
