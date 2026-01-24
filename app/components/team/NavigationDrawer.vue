@@ -37,6 +37,10 @@
         </v-btn>
       </div>
 
+      <v-list-item v-if="unref(chatSection.items).length === 0">
+        No chats yet.
+      </v-list-item>
+
       <v-list-item
         v-for="chat in unref(chatSection.items)"
         :key="chat.id"
@@ -90,6 +94,10 @@
         </v-btn>
       </div>
 
+      <v-list-item v-if="unref(boardSection.items).length === 0">
+        No task boards yet.
+      </v-list-item>
+
       <v-list-item
         v-for="board in unref(boardSection.items)"
         :key="board.id"
@@ -127,11 +135,60 @@
 
       <v-divider class="mt-2" />
 
-      <v-list-subheader>Notes</v-list-subheader>
+      <!-- Notes Section -->
+      <div class="flex w-full justify-between">
+        <v-list-subheader>
+          Notes
+        </v-list-subheader>
 
-      <v-list-item>
-        <span class="font-black">#</span> Test Notes 1
+        <v-btn
+          icon
+          size="small"
+          variant="plain"
+          @click="noteDialogVisible = true"
+        >
+          <v-icon>mdi-plus</v-icon>
+        </v-btn>
+      </div>
+
+      <v-list-item v-if="unref(noteSection.items).length === 0">
+        No notes yet.
       </v-list-item>
+
+      <v-list-item
+        v-for="note in unref(noteSection.items)"
+        :key="note.id"
+        :to="`/team/${team.id}/note/${note.id}`"
+        @contextmenu.prevent="noteSection.showContextMenu($event, note)"
+      >
+        <span class="font-black"># </span>
+
+        <span>{{ note.title }}</span>
+      </v-list-item>
+
+      <v-menu
+        :model-value="unref(noteSection.menuVisible)"
+        :activator="unref(noteSection.menuActivator)"
+        offset-y
+        @update:model-value="(v) => {
+          noteSection.menuVisible.value = v
+        }"
+      >
+        <v-list>
+          <v-list-item @click="noteSection.openRenameDialog()">
+            <span class="mdi mdi-square-edit-outline" />
+            Rename
+          </v-list-item>
+
+          <v-list-item
+            class="text-error"
+            @click="noteSection.openDeleteDialog()"
+          >
+            <span class="mdi mdi-delete" />
+            Delete
+          </v-list-item>
+        </v-list>
+      </v-menu>
     </v-list>
   </v-navigation-drawer>
 
@@ -146,6 +203,13 @@
     v-if="team"
     v-model="boardDialogVisible"
     type="board"
+    :team-id="team.id"
+  />
+
+  <TeamCreateDialog
+    v-if="team"
+    v-model="noteDialogVisible"
+    type="notes"
     :team-id="team.id"
   />
 
@@ -196,6 +260,30 @@
     }"
     @confirm="boardSection.handleDeleteConfirm"
   />
+
+  <!-- Notes Rename/Delete Dialogs -->
+  <RenameDialog
+    :model-value="unref(noteSection.renameDialogVisible)"
+    :object-name="unref(noteSection.selectedItem)?.name"
+    object="Note"
+    :loading="unref(noteSection.isLoading)"
+    @update:model-value="(v) => {
+      noteSection.renameDialogVisible.value = v
+    }"
+    @confirm="noteSection.handleRenameConfirm"
+  />
+
+  <ConfirmDialog
+    :model-value="unref(noteSection.deleteDialogVisible)"
+    title="Delete Note"
+    message="Are you sure you want to delete this note?"
+    confirm-text="Delete"
+    confirm-color="error"
+    @update:model-value="(v) => {
+      noteSection.deleteDialogVisible.value = v
+    }"
+    @confirm="noteSection.handleDeleteConfirm"
+  />
 </template>
 
 <script setup lang="ts">
@@ -207,12 +295,16 @@ const { team } = storeToRefs(teamStore)
 
 const chatDialogVisible = ref(false)
 const boardDialogVisible = ref(false)
+const noteDialogVisible = ref(false)
 
 const chatStore = useChatStore()
 const { chats } = storeToRefs(chatStore)
 
 const boardStore = useBoardStore()
 const { boards } = storeToRefs(boardStore)
+
+const noteStore = useNoteStore()
+const { notes } = storeToRefs(noteStore)
 
 async function handleDeleteChat(chat: any) {
   await chatStore.deleteChat(chat.id)
@@ -226,6 +318,14 @@ async function handleDeleteBoard(board: any) {
   await boardStore.deleteBoard(board.id)
   // If user is on this board's page, redirect to team page
   if (route.params.boardId === board.id) {
+    await router.push(`/team/${teamId}`)
+  }
+}
+
+async function handleDeleteNote(note: any) {
+  await noteStore.deleteNote(note.id)
+  // If user is on this note's page, redirect to team page
+  if (route.params.noteId === note.id) {
     await router.push(`/team/${teamId}`)
   }
 }
@@ -244,11 +344,19 @@ const boardSection = useCollectionSection({
   onRefetch: () => boardStore.fetchTeamBoards(teamId),
 })
 
+const noteSection = useCollectionSection({
+  items: notes,
+  onRename: (note, newName) => noteStore.updateNote(note.id, { title: newName }),
+  onDelete: handleDeleteNote,
+  onRefetch: () => noteStore.fetchTeamNotes(teamId),
+})
+
 onMounted(async () => {
   await Promise.all([
     teamStore.fetchTeam(teamId),
     chatStore.fetchTeamChats(teamId),
     boardStore.fetchTeamBoards(teamId),
+    noteStore.fetchTeamNotes(teamId),
   ])
 })
 </script>
