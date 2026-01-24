@@ -21,6 +21,26 @@
         class="flex flex-col gap-4 max-w-220"
       >
         <h2 class="text-2xl tracking-wider py-4">
+          Team Owner
+        </h2>
+
+        <div class="flex gap-4 items-center">
+          <v-avatar size="48">
+            <v-img :src="teamOwner?.photoUrl || '/default-avatar.webp'" />
+          </v-avatar>
+
+          <div>
+            <p class="text-lg">
+              {{ teamOwner?.name || 'Unknown User' }}
+            </p>
+
+            <p class="text-gray-500">
+              {{ teamOwner?.email || 'Unknown Mail' }}
+            </p>
+          </div>
+        </div>
+
+        <h2 class="text-2xl tracking-wider py-4">
           Settings
         </h2>
 
@@ -52,12 +72,13 @@
         >
           <UserSelect
             v-model="teamMembers"
-            :selected-ids="teamStore.teamMembers.map(member => member.user_id)"
+            :selected-ids="teamStore.teamMembers.filter(member => member.user_id !== team?.created_by).map(member => member.user_id)"
             :disabled="!teamMembersEdit"
             variant="outlined"
             hide-details
             label="Team Members"
             multiple
+            hide-logged-user
           />
 
           <v-btn
@@ -87,6 +108,9 @@ import type User from '~/types/user'
 const route = useRoute()
 const teamId = route.params.teamId as string
 
+const userStore = useUserStore()
+const { users } = storeToRefs(userStore)
+
 const teamStore = useTeamStore()
 const { team } = storeToRefs(teamStore)
 
@@ -96,6 +120,10 @@ const teamMembersEdit = ref(false)
 const teamMembers = ref<User[]>([])
 const teamMembersLoaded = ref(false)
 const teamMembersLoading = ref(false)
+
+const teamOwner = computed(() => {
+  return users.value.find(u => u.id === team.value?.created_by)
+})
 
 onMounted(async () => {
   teamMembersLoading.value = true

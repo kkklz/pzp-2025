@@ -37,6 +37,7 @@ interface Props {
   selectedIds?: string[]
   multiple?: boolean
   teamId?: string
+  hideLoggedUser?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -46,7 +47,7 @@ const props = withDefaults(defineProps<Props>(), {
 const selectedUsers = defineModel<User | User[]>({ required: true })
 const userStore = useUserStore()
 const teamStore = useTeamStore()
-const { users } = storeToRefs(userStore)
+const { users, user } = storeToRefs(userStore)
 const { teamMembers } = storeToRefs(teamStore)
 
 const selectedUsersIds = ref<string[]>([])
@@ -60,6 +61,10 @@ const availableUsers = computed(() => {
       .map(m => m.user_id)
 
     return users.value.filter(u => teamMemberIds.includes(u.id))
+  }
+
+  if (props.hideLoggedUser) {
+    return users.value.filter(u => u.id !== user.value?.id)
   }
 
   return users.value

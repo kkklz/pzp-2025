@@ -18,6 +18,7 @@
         <UserSelect
           v-model="selectedUsers"
           multiple
+          hide-logged-user
         />
 
         <v-btn
@@ -57,6 +58,7 @@ async function handleCreateTeam() {
     console.log(error.value)
   }
   await teamStore.addTeamMembers(team.value!.id, selectedUsers.value.map(u => u.id))
+  await teamStore.addTeamMembers(team.value!.id, [user.value!.id]) // add self
   if (error.value) {
     // eslint-disable-next-line no-console
     console.log(error.value)
