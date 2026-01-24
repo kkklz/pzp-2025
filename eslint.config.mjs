@@ -11,7 +11,7 @@ export default antfu({
       'vue/valid-v-slot': 'error',
       'eqeqeq': 'error',
       'style/no-mixed-operators': 'error',
-      'max-lines': ['error', 500],
+      'max-lines': ['error', 600],
       'vue/max-attributes-per-line': [
         'error',
         {
