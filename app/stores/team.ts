@@ -87,6 +87,7 @@ export const useTeamStore = defineStore('team', () => {
 
     if (err)
       error.value = err
+    console.log(err)
 
     loading.value = false
   }

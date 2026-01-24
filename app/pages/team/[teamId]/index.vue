@@ -5,15 +5,26 @@
       class="pa-8"
     >
       <v-card-title>
-        <div class="flex gap-4 items-center">
-          <TeamIcon
-            :size="80"
-            :team="team"
-          />
+        <div class="flex gap-4 w-full items-center justify-between">
+          <div class="flex gap-4 items-center">
+            <TeamIcon
+              :size="80"
+              :team="team"
+            />
 
-          <h1 class="text-4xl tracking-wider font-bold">
-            Team Overview
-          </h1>
+            <h1 class="text-4xl tracking-wider font-bold">
+              Team Overview
+            </h1>
+          </div>
+
+          <v-btn
+            icon
+            color="error"
+            variant="text"
+            @click="deleteDialogOpen = true"
+          >
+            <v-icon>mdi-trash-can</v-icon>
+          </v-btn>
         </div>
       </v-card-title>
 
@@ -99,6 +110,13 @@
         />
       </v-card-text>
     </v-card>
+
+    <DeleteTeamDialog
+      v-model="deleteDialogOpen"
+      :team-name="team?.name || ''"
+      :loading="teamStore.loading"
+      @confirm="handleDeleteTeam"
+    />
   </TeamPage>
 </template>
 
@@ -106,6 +124,7 @@
 import type User from '~/types/user'
 
 const route = useRoute()
+const router = useRouter()
 const teamId = route.params.teamId as string
 
 const userStore = useUserStore()
@@ -120,6 +139,7 @@ const teamMembersEdit = ref(false)
 const teamMembers = ref<User[]>([])
 const teamMembersLoaded = ref(false)
 const teamMembersLoading = ref(false)
+const deleteDialogOpen = ref(false)
 
 const teamOwner = computed(() => {
   return users.value.find(u => u.id === team.value?.created_by)
@@ -163,4 +183,10 @@ watch(teamMembersEdit, async (newVal) => {
     await teamStore.removeTeamMembers(team.value.id, usersToRemove)
   }
 })
+
+async function handleDeleteTeam() {
+  await teamStore.deleteTeam(teamId)
+  deleteDialogOpen.value = false
+  await router.push('/')
+}
 </script>
