@@ -155,7 +155,9 @@ watch(teamMembersEdit, async (newVal) => {
     }
 
     const usersToAdd = selectedUserIds.filter(id => !currentMemberIds.includes(id))
-    const usersToRemove = currentMemberIds.filter(id => !selectedUserIds.includes(id))
+    const usersToRemove = currentMemberIds
+      .filter(id => !selectedUserIds.includes(id))
+      .filter(id => id !== team.value!.created_by) // don't remove owner
 
     await teamStore.addTeamMembers(team.value.id, usersToAdd)
     await teamStore.removeTeamMembers(team.value.id, usersToRemove)
