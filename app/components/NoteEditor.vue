@@ -89,14 +89,14 @@
         class="note-content-input"
         placeholder="Start writing your note...
 
-          Formatting:
-          # Header 1
-          ## Header 2
-          ### Header 3
-          **bold text**
-          *italic text*
-          ~~strikethrough~~
-          `inline code`"
+Formatting:
+# Header 1
+## Header 2
+### Header 3
+**bold text**
+*italic text*
+~~strikethrough~~
+`inline code`"
         auto-grow
         rows="15"
         hide-details
