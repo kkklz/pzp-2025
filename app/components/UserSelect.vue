@@ -69,9 +69,9 @@ onBeforeMount(async () => {
   loading.value = true
   try {
     await userStore.fetchUsers()
-    if (props.teamId) {
-      await teamStore.fetchTeamMembers(props.teamId)
-    }
+    // if (props.teamId) {
+    //   await teamStore.fetchTeamMembers(props.teamId)
+    // }
   }
   finally {
     loading.value = false

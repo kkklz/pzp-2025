@@ -76,6 +76,7 @@
                     <v-list-item
                       link
                       class="text-error"
+                      @click="handleOpenDeleteTask(task)"
                     >
                       <span class="mdi mdi-delete" />
                       Delete
@@ -141,6 +142,18 @@
     @update:open="showTaskDialog = $event"
     @save="handleSaveTask"
   />
+
+  <ConfirmDialog
+    v-model="showDeleteDialog"
+    title="Delete Task"
+    message="Are you sure you want to delete this task?"
+    confirm-text="Delete"
+    confirm-color="error"
+    @confirm="handleDeleteTask"
+    @update:model-value="(v) => {
+      showDeleteDialog = v
+    }"
+  />
 </template>
 
 <script setup lang="tsx">
@@ -155,12 +168,15 @@ const userStore = useUserStore()
 const { user, users } = storeToRefs(userStore)
 
 const route = useRoute()
+const router = useRouter()
 const boardId = route.params.boardId as string
 const teamId = route.params.teamId as string
 
 const showTaskDialog = ref(false)
 const selectedTask = ref<Task | null>(null)
 const currentUserTeamMemberId = ref('')
+
+const showDeleteDialog = ref(false)
 
 function getTaskCreatorPhotoUrl(taskCreatedById: string): string {
   // Find the team_member record with this ID
@@ -237,6 +253,18 @@ function handleOpenEditTask(task: Task) {
   showTaskDialog.value = true
 }
 
+function handleOpenDeleteTask(task: Task) {
+  selectedTask.value = task
+  showDeleteDialog.value = true
+}
+
+async function handleDeleteTask() {
+  if (selectedTask.value) {
+    const tAssignees = getTaskAssignees(selectedTask.value.id)
+    await boardStore.deleteTask(selectedTask.value.id, tAssignees.value)
+  }
+}
+
 async function handleSaveTask(data: { task: Omit<Task, 'id'>, assignees: User[] }) {
   const currentTask = selectedTask.value
   try {
@@ -260,6 +288,9 @@ async function handleSaveTask(data: { task: Omit<Task, 'id'>, assignees: User[] 
           })
         }
       }))
+
+      // Refresh assignees for this task
+      await boardStore.fetchTaskAssignees(currentTask.id, true)
     }
     else {
       // Create new task
@@ -277,6 +308,9 @@ async function handleSaveTask(data: { task: Omit<Task, 'id'>, assignees: User[] 
           })
         }
       }))
+
+      // Fetch assignees for new task
+      await boardStore.fetchTaskAssignees(newTaskData.id, true)
     }
 
     if (currentTask === selectedTask.value) {
@@ -295,6 +329,13 @@ onBeforeMount(async () => {
     boardStore.fetchBoardWithTasks(boardId),
     teamStore.fetchTeamMembers(teamId),
   ])
+
+  // Check if board exists
+  if (!board.value) {
+    await router.push('/error')
+
+    return
+  }
 
   // Find the current user's team member ID
   const currentTeamMember = teamMembers.value.find(

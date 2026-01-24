@@ -200,6 +200,7 @@
 
 <script setup lang="ts">
 const route = useRoute()
+const router = useRouter()
 const teamId = route.params.teamId as string
 const teamStore = useTeamStore()
 const { team } = storeToRefs(teamStore)
@@ -213,17 +214,33 @@ const { chats } = storeToRefs(chatStore)
 const boardStore = useBoardStore()
 const { boards } = storeToRefs(boardStore)
 
+async function handleDeleteChat(chat: any) {
+  await chatStore.deleteChat(chat.id)
+  // If user is on this chat's page, redirect to team page
+  if (route.params.chatId === chat.id) {
+    await router.push(`/team/${teamId}`)
+  }
+}
+
+async function handleDeleteBoard(board: any) {
+  await boardStore.deleteBoard(board.id)
+  // If user is on this board's page, redirect to team page
+  if (route.params.boardId === board.id) {
+    await router.push(`/team/${teamId}`)
+  }
+}
+
 const chatSection = useCollectionSection({
   items: chats,
   onRename: (chat, newName) => chatStore.updateChat(chat.id, newName),
-  onDelete: chat => chatStore.deleteChat(chat.id),
+  onDelete: handleDeleteChat,
   onRefetch: () => chatStore.fetchTeamChats(teamId),
 })
 
 const boardSection = useCollectionSection({
   items: boards,
   onRename: (board, newName) => boardStore.updateBoard(board.id, newName),
-  onDelete: board => boardStore.deleteBoard(board.id),
+  onDelete: handleDeleteBoard,
   onRefetch: () => boardStore.fetchTeamBoards(teamId),
 })
 

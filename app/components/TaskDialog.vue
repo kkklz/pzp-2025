@@ -47,6 +47,7 @@
             :team-id="teamId"
             multiple
             label="Select assignees"
+            :selected-ids="unref(selectedAssignees.map(sa => sa.id))"
           />
 
           <v-card-actions class="d-flex justify-between">

@@ -18,10 +18,20 @@ export const useBoardStore = defineStore('board', () => {
 
   function clearStore() {
     board.value = null
-    boards.value = []
     tasks.value = []
     error.value = null
     loading.value = false
+  }
+
+  function sortTasks(tasksToSort: Task[]): Task[] {
+    return tasksToSort.sort((a: Task, b: Task) => {
+      const statusOrder: Record<Task['status'], number> = { Created: 0, Doing: 1, Done: 2 }
+      const statusDiff = (statusOrder[a.status] ?? 0) - (statusOrder[b.status] ?? 0)
+      if (statusDiff !== 0)
+        return statusDiff
+
+      return new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+    })
   }
 
   async function addBoard(boardData: Omit<Board, 'id' | 'created_at'>) {
@@ -89,21 +99,22 @@ export const useBoardStore = defineStore('board', () => {
       created_at: data.created_at,
     }
 
-    tasks.value = data.tasks.map(t => ({
-      id: t.id,
-      board_id: t.board_id,
-      title: t.title,
-      description: t.description || '',
-      status: t.status,
-      due_date: t.due_date,
-      created_by: t.created_by,
-      created_at: t.created_at,
-    }))
+    tasks.value = sortTasks(data.tasks
+      .map(t => ({
+        id: t.id,
+        board_id: t.board_id,
+        title: t.title,
+        description: t.description || '',
+        status: t.status,
+        due_date: t.due_date,
+        created_by: t.created_by,
+        created_at: t.created_at,
+      })))
 
     loading.value = false
   }
 
-  async function fetchTaskAssignees(taskId: string) {
+  async function fetchTaskAssignees(taskId: string, refresh = false) {
     error.value = null
     loading.value = false
     const { data, error: err } = await supabase.from(TASK_ASSIGNEES).select().eq('task_id', taskId)
@@ -112,7 +123,17 @@ export const useBoardStore = defineStore('board', () => {
       error.value = err
     }
     else {
-      taskAssignees.value = data
+      if (refresh) {
+        // Remove old assignees for this task and add new ones
+        taskAssignees.value = taskAssignees.value.filter(ta => ta.task_id !== taskId)
+        taskAssignees.value.push(...data)
+      }
+      else {
+        // Append new assignees, avoiding duplicates
+        const existingIds = new Set(taskAssignees.value.map(ta => ta.id))
+        const newAssignees = data.filter(ta => !existingIds.has(ta.id))
+        taskAssignees.value.push(...newAssignees)
+      }
     }
 
     loading.value = false
@@ -160,6 +181,7 @@ export const useBoardStore = defineStore('board', () => {
     }
     else {
       tasks.value.push(data)
+      tasks.value = sortTasks(tasks.value)
       loading.value = false
 
       return data
@@ -184,8 +206,35 @@ export const useBoardStore = defineStore('board', () => {
         ? data
         : t))
 
+      tasks.value = sortTasks(tasks.value)
       loading.value = false
     }
+  }
+
+  async function deleteTask(taskId: string, tAssignees: TaskAssignee[]) {
+    error.value = null
+    loading.value = true
+
+    try {
+      await Promise.all(tAssignees.map(ta => deleteTaskAssignee(ta.id)))
+    }
+    catch (err: any) {
+      error.value = err
+      loading.value = false
+
+      return
+    }
+
+    const { error: err } = await supabase.from(TASKS).delete().eq('id', taskId)
+
+    if (err) {
+      error.value = err
+      loading.value = false
+
+      throw err
+    }
+    tasks.value = tasks.value.filter(t => t.id !== taskId)
+    loading.value = false
   }
 
   async function addTaskAssignee(assigneeData: Omit<TaskAssignee, 'id'>) {
@@ -201,7 +250,8 @@ export const useBoardStore = defineStore('board', () => {
       throw err
     }
     else {
-      taskAssignees.value.push(data)
+      if (!taskAssignees.value.find(ta => ta.user_id !== data.user_id))
+        taskAssignees.value.push(data)
       loading.value = false
     }
 
@@ -215,6 +265,9 @@ export const useBoardStore = defineStore('board', () => {
 
     if (err) {
       error.value = err
+      loading.value = false
+
+      throw err
     }
     loading.value = false
   }
@@ -235,6 +288,7 @@ export const useBoardStore = defineStore('board', () => {
     deleteBoard,
     addTask,
     updateTask,
+    deleteTask,
     addTaskAssignee,
     deleteTaskAssignee,
   }
