@@ -5,26 +5,20 @@
       class="d-flex flex-column"
       :loading="loading"
     >
-      <!-- Chat Header -->
-      <v-card-title class="text-white px-8 py-4">
-        <div class="flex">
-          <div>
-            <v-icon>
-              mdi-chat
-            </v-icon>
-            {{ chat?.name || 'Chat' }}
-            <v-spacer />
+      <v-card-title class="d-flex px-6 py-5 items-center justify-between">
+        <div class="d-flex gap-4 items-center">
+          <div class="p-2 rounded-xl">
+            <v-icon
+              icon="mdi-chat"
+              size="28"
+              color="primary"
+            />
+          </div>
 
-            <v-chip
-              size="small"
-              color="success"
-              variant="outlined"
-            >
-              <v-icon start>
-                mdi-circle
-              </v-icon>
-              Online
-            </v-chip>
+          <div>
+            <h2 class="text-xl tracking-wide font-bold">
+              {{ chat?.name || 'Chat' }}
+            </h2>
           </div>
         </div>
       </v-card-title>
@@ -116,7 +110,7 @@
 
       <v-divider />
       <!-- Message Input -->
-      <v-card-actions class="pa-3">
+      <v-card-actions class="pa-6 items-center justify-center flex!">
         <v-text-field
           v-model="message"
           placeholder="Type a message..."
@@ -124,23 +118,17 @@
           density="comfortable"
           hide-details
           :disabled="!user"
-          class="px-8 py-0"
+          class="px-8"
           autocomplete="off"
           @keydown.enter="sendMessage"
-        >
-          <template
-            #append-inner
-          >
-            <div>
-              <v-btn
-                icon="mdi-send"
-                size="small"
-                :disabled="!message.trim() || !user"
-                @click="sendMessage"
-              />
-            </div>
-          </template>
-        </v-text-field>
+        />
+
+        <v-btn
+          icon="mdi-send"
+          size="small"
+          :disabled="!message.trim() || !user"
+          @click="sendMessage"
+        />
       </v-card-actions>
     </v-card>
   </TeamPage>
@@ -250,6 +238,7 @@ onMounted(async () => {
   // Check if chat exists
   if (!chat.value) {
     await router.push('/error')
+
     return
   }
 

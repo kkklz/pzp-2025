@@ -4,7 +4,7 @@
     class="note-editor"
     :loading="saving"
   >
-    <v-card-title class="d-flex align-center">
+    <v-card-title class="d-flex px-6 py-5 items-center">
       <v-text-field
         v-model="editableTitle"
         variant="plain"
@@ -14,7 +14,17 @@
         placeholder="Note title"
         @blur="saveTitle"
         @keydown.enter="saveTitle"
-      />
+      >
+        <template #prepend>
+          <div class="flex items-center justify-center">
+            <v-icon
+              icon="mdi-note-outline"
+              size="28"
+              color="primary"
+            />
+          </div>
+        </template>
+      </v-text-field>
 
       <v-btn-toggle
         v-model="viewMode"
@@ -175,6 +185,7 @@ function saveContent() {
 .note-title-input :deep(input) {
   font-size: 1.5rem;
   font-weight: bold;
+  padding-top: 0.2rem;
 }
 
 .note-content-input :deep(textarea) {
