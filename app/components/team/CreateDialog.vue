@@ -54,8 +54,13 @@ const props = defineProps<{
 const model = defineModel<boolean>({ required: true })
 const { type, teamId, onConfirm } = toRefs(props)
 
+const authStore = useAuthStore()
+const { authUser } = storeToRefs(authStore)
+const teamStore = useTeamStore()
+const { teamMembers } = storeToRefs(teamStore)
 const chatStore = useChatStore()
 const boardStore = useBoardStore()
+const noteStore = useNoteStore()
 
 const name = ref('')
 const isFormValid = ref<boolean | null>(null)
@@ -81,6 +86,15 @@ async function handleCreate() {
       else if (type.value === 'board') {
         await boardStore.addBoard({ name: name.value, team_id: teamId.value })
         await boardStore.fetchTeamBoards(teamId.value)
+      }
+      else if (type.value === 'notes') {
+        if (!teamMembers.value)
+          teamStore.fetchTeamMembers(teamId.value)
+        const teamMember = teamMembers.value?.find(member => member.team_id === teamId.value && member.user_id === authUser.value?.id)
+        await noteStore.addNote({ title: name.value, content: '', team_id: teamId.value, created_by: teamMember
+          ? teamMember.id
+          : '' })
+        await noteStore.fetchTeamNotes(teamId.value)
       }
     }
     model.value = false
