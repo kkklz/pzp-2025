@@ -47,7 +47,12 @@
         :to="`/team/${team.id}/chat/${chat.id}`"
         @contextmenu.prevent="chatSection.showContextMenu($event, chat)"
       >
-        <span class="font-black"># </span>
+        <v-icon
+          size="16"
+          class="mr-1"
+        >
+          mdi-chat
+        </v-icon>
 
         <span>{{ chat.name }}</span>
       </v-list-item>
@@ -104,7 +109,12 @@
         :to="`/team/${team.id}/board/${board.id}`"
         @contextmenu.prevent="boardSection.showContextMenu($event, board)"
       >
-        <span class="font-black"># </span>
+        <v-icon
+          size="16"
+          class="mr-1"
+        >
+          mdi-clipboard-list
+        </v-icon>
 
         <span>{{ board.name }}</span>
       </v-list-item>
@@ -161,7 +171,12 @@
         :to="`/team/${team.id}/note/${note.id}`"
         @contextmenu.prevent="noteSection.showContextMenu($event, note)"
       >
-        <span class="font-black"># </span>
+        <v-icon
+          size="16"
+          class="mr-1"
+        >
+          mdi-note-text
+        </v-icon>
 
         <span>{{ note.title }}</span>
       </v-list-item>
