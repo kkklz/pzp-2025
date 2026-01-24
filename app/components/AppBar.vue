@@ -98,24 +98,6 @@
 
               <v-list density="compact">
                 <v-list-item
-                  prepend-icon="mdi-account-outline"
-                  to="/profile"
-                >
-                  Profile
-                </v-list-item>
-
-                <v-list-item
-                  prepend-icon="mdi-cog-outline"
-                  to="/settings"
-                >
-                  Settings
-                </v-list-item>
-              </v-list>
-
-              <v-divider />
-
-              <v-list density="compact">
-                <v-list-item
                   prepend-icon="mdi-logout"
                   class="text-red-400!"
                   @click="onLogout"
