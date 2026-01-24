@@ -73,11 +73,9 @@
           />
         </div>
 
-        <h2 class="text-2xl tracking-wider py-4">
-          Statistics
-        </h2>
-
-        <span>TODO</span>
+        <TeamStatistics
+          :team-id="teamId"
+        />
       </v-card-text>
     </v-card>
   </TeamPage>
