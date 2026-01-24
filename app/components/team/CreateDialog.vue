@@ -48,21 +48,46 @@
 const props = defineProps<{
   type: 'chat' | 'board' | 'notes'
   teamId: string
+  onConfirm?: (name: string) => Promise<void>
 }>()
 
 const model = defineModel<boolean>({ required: true })
-const { type, teamId } = toRefs(props)
+const { type, teamId, onConfirm } = toRefs(props)
 
 const chatStore = useChatStore()
+const boardStore = useBoardStore()
 
 const name = ref('')
 const isFormValid = ref<boolean | null>(null)
+const isLoading = ref(false)
 const { teamNameRules } = useValidationRules()
 
 async function handleCreate() {
-  if (type.value === 'chat') {
-    await chatStore.addChat({ name: name.value, team_id: teamId.value })
-    await chatStore.fetchTeamChats(teamId.value)
+  if (!isFormValid.value)
+    return
+
+  isLoading.value = true
+  try {
+    // If custom onConfirm is provided, use it
+    if (onConfirm?.value) {
+      await onConfirm.value(name.value)
+    }
+    else {
+      // Default handlers for built-in types
+      if (type.value === 'chat') {
+        await chatStore.addChat({ name: name.value, team_id: teamId.value })
+        await chatStore.fetchTeamChats(teamId.value)
+      }
+      else if (type.value === 'board') {
+        await boardStore.addBoard({ name: name.value, team_id: teamId.value })
+        await boardStore.fetchTeamBoards(teamId.value)
+      }
+    }
+    model.value = false
+    name.value = ''
+  }
+  finally {
+    isLoading.value = false
   }
 }
 </script>

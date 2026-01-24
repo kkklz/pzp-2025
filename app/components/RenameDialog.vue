@@ -29,7 +29,7 @@
         <v-btn
           color="primary"
           variant="flat"
-          :loading="loading"
+          :loading="props.loading"
           @click="handleConfirm"
         >
           Rename
@@ -43,6 +43,7 @@
 interface Props {
   object?: string
   objectName?: string
+  loading?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -57,7 +58,6 @@ const emit = defineEmits<{
 
 const isOpen = defineModel<boolean>({ default: false })
 const newName = ref('')
-const loading = ref(false)
 
 watch(isOpen, (newVal) => {
   if (newVal && props.objectName) {

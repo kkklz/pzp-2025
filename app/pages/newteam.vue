@@ -17,6 +17,7 @@
 
         <UserSelect
           v-model="selectedUsers"
+          multiple
         />
 
         <v-btn

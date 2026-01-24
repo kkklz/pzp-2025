@@ -153,6 +153,7 @@ const chatStore = useChatStore()
 const { messages, chat } = storeToRefs(chatStore)
 
 const route = useRoute()
+const router = useRouter()
 const chatId = route.params.chatId as string
 const teamId = route.params.teamId as string
 
@@ -245,6 +246,13 @@ onMounted(async () => {
   const userIds = teamMembers.value.map(m => m.user_id)
   await userStore.fetchUsersByIds(userIds)
   await chatStore.fetchChatWithMessages(chatId)
+
+  // Check if chat exists
+  if (!chat.value) {
+    await router.push('/error')
+    return
+  }
+
   scrollToBottom()
 
   myChannel

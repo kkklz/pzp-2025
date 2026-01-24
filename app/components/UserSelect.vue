@@ -1,27 +1,27 @@
 <template>
   <v-autocomplete
     v-model="selectedUsersIds"
-    label="Select Users"
-    :items="users"
+    :label="label"
+    :items="availableUsers"
     item-title="name"
     item-value="id"
-    :loading="usersLoading"
+    :loading="loading"
     autocomplete="off"
     chips
     closable-chips
-    multiple
+    :multiple="multiple"
   >
-    <template #chip="{props, item}">
+    <template #chip="{'props': chipProps, item}">
       <v-chip
-        v-bind="props"
+        v-bind="chipProps"
         :prepend-avatar="item.raw.photoUrl || '/default-avatar.webp'"
         :text="item.raw.name"
       />
     </template>
 
-    <template #[`item`]="{props, item}">
+    <template #[`item`]="{'props': itemProps, item}">
       <v-list-item
-        v-bind="props"
+        v-bind="itemProps"
         :prepend-avatar="item.raw.photoUrl || '/default-avatar.webp'"
         :text="item.raw.name"
       />
@@ -32,24 +32,63 @@
 <script setup lang="ts">
 import type User from '~/types/user'
 
-const { selectedIds } = defineProps<{
+interface Props {
+  label?: string
   selectedIds?: string[]
-}>()
+  multiple?: boolean
+  teamId?: string
+}
 
-const selectedUsers = defineModel<User[]>({ required: true })
+const props = withDefaults(defineProps<Props>(), {
+  label: 'Select Users',
+})
+
+const selectedUsers = defineModel<User | User[]>({ required: true })
 const userStore = useUserStore()
-const { users, loading: usersLoading } = storeToRefs(userStore)
+const teamStore = useTeamStore()
+const { users } = storeToRefs(userStore)
+const { teamMembers } = storeToRefs(teamStore)
 
 const selectedUsersIds = ref<string[]>([])
+const loading = ref(false)
+
+const availableUsers = computed(() => {
+  // Jeśli teamId jest podane, filtruj użytkowników do członków teamu
+  if (props.teamId) {
+    const teamMemberIds = teamMembers.value
+      .filter(m => m.team_id === props.teamId)
+      .map(m => m.user_id)
+
+    return users.value.filter(u => teamMemberIds.includes(u.id))
+  }
+
+  return users.value
+})
 
 onBeforeMount(async () => {
-  await userStore.fetchUsers()
-  if (selectedIds) {
-    selectedUsersIds.value = selectedIds
+  loading.value = true
+  try {
+    await userStore.fetchUsers()
+    // if (props.teamId) {
+    //   await teamStore.fetchTeamMembers(props.teamId)
+    // }
+  }
+  finally {
+    loading.value = false
+  }
+
+  if (props.selectedIds) {
+    selectedUsersIds.value = props.selectedIds
   }
 })
 
 watch(selectedUsersIds, () => {
-  selectedUsers.value = users.value.filter(u => selectedUsersIds.value.includes(u.id))
+  const selected = users.value.filter(u => selectedUsersIds.value.includes(u.id))
+  if (props.multiple) {
+    selectedUsers.value = selected
+  }
+  else {
+    selectedUsers.value = selected[0] || ({} as User)
+  }
 }, { immediate: true })
 </script>

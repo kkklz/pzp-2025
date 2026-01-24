@@ -18,20 +18,20 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          name: string | null
-          team_id: string | null
+          name: string
+          team_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          name?: string | null
-          team_id?: string | null
+          name: string
+          team_id?: string
         }
         Update: {
           created_at?: string
           id?: string
-          name?: string | null
-          team_id?: string | null
+          name?: string
+          team_id?: string
         }
         Relationships: [
           {
@@ -86,26 +86,26 @@ export type Database = {
         Row: {
           content: string | null
           created_at: string
-          created_by: string | null
+          created_by: string
           id: string
-          team_id: string | null
-          title: string | null
+          team_id: string
+          title: string
         }
         Insert: {
           content?: string | null
           created_at: string
-          created_by?: string | null
+          created_by?: string
           id?: string
-          team_id?: string | null
-          title?: string | null
+          team_id?: string
+          title: string
         }
         Update: {
           content?: string | null
           created_at?: string
-          created_by?: string | null
+          created_by?: string
           id?: string
-          team_id?: string | null
-          title?: string | null
+          team_id?: string
+          title?: string
         }
         Relationships: [
           {
@@ -128,20 +128,20 @@ export type Database = {
         Row: {
           created_at: string
           id: string
-          task_id: string | null
-          user_id: string | null
+          task_id: string
+          user_id: string
         }
         Insert: {
           created_at?: string
           id?: string
-          task_id?: string | null
-          user_id?: string | null
+          task_id?: string
+          user_id?: string
         }
         Update: {
           created_at?: string
           id?: string
-          task_id?: string | null
-          user_id?: string | null
+          task_id?: string
+          user_id?: string
         }
         Relationships: [
           {
@@ -162,34 +162,34 @@ export type Database = {
       }
       tasks: {
         Row: {
-          board_id: string | null
+          board_id: string
           created_at: string
-          created_by: string | null
+          created_by: string
           description: string | null
-          due_date: string | null
+          due_date: string
           id: string
-          status: string | null
-          title: string | null
+          status: string
+          title: string
         }
         Insert: {
-          board_id?: string | null
+          board_id?: string
           created_at?: string
-          created_by?: string | null
+          created_by?: string
           description?: string | null
-          due_date?: string | null
+          due_date?: string
           id?: string
-          status?: string | null
-          title?: string | null
+          status: string
+          title: string
         }
         Update: {
-          board_id?: string | null
+          board_id?: string
           created_at?: string
-          created_by?: string | null
+          created_by?: string
           description?: string | null
-          due_date?: string | null
+          due_date?: string
           id?: string
-          status?: string | null
-          title?: string | null
+          status?: string
+          title?: string
         }
         Relationships: [
           {
